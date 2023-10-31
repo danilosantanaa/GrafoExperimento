@@ -355,15 +355,17 @@ void adicionarNo(ElementoStruct* elemento, ContentStruct content)
 
 bool temContent(ElementoStruct* elemento, ContentStruct content)
 {
-	NoStruct* aux = elemento->NoInicial;
+	NoStruct* no = elemento->NoInicial;
 
-	while(aux != NULL) 
+	while(no != NULL) 
 	{
-		bool is_contents_iguais = strcmp(aux->Content.content, content.content);
+		bool is_contents_iguais = strcmp(no->Content.content, content.content);
 		if(is_contents_iguais) 
 		{
 			return true;
 		}
+
+		no = no->Prox;
 	}
 
 	return false;
