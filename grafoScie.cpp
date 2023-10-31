@@ -14,7 +14,7 @@ typedef struct content {
 } ContentStruct;
 
 typedef struct coluna {
-	ContentStruct Content;
+	ContentStruct* Content;
 } ColunaStruct;
 
 typedef struct linha {
@@ -65,6 +65,7 @@ void printLista();
 // Manipulacao de arquivos e preenchimento da matriz
 void tokenizar(char*, int, void (*func_ptr)(char*, int, int));
 void atribuirToken(char*, int, int);
+void referenciarDiaInferiorcomDiaSuperior();
 void preencherMatriz(char*, int);
 void readFile(char*);
 void printMatriz();
@@ -214,12 +215,37 @@ void tokenizar(
 	}
 }
 
+
 void atribuirToken(char* token, int pos_linha, int pos_coluna) 
+{	
+
+	if(pos_coluna <= pos_linha) 
+	{
+		LinhaStruct* linha = Matriz.Linha[pos_linha];
+		ColunaStruct* coluna = linha->Coluna[pos_coluna];
+
+		coluna->Content = (ContentStruct*) malloc(sizeof(ContentStruct));
+		throwExceptionMemoryAlloc<ContentStruct*>(coluna->Content);
+
+		strcpy(coluna->Content->content, token);
+	} 
+}
+
+void referenciarDiaInferiorcomDiaSuperior() 
 {
-	LinhaStruct* linha = Matriz.Linha[pos_linha];
-	ColunaStruct* coluna = linha->Coluna[pos_coluna];
-	
-	strcpy(coluna->Content.content, token);
+	for(int i = 0; i < Matriz.dimensao; i++) 
+	{
+		for(int j = i+1; j < Matriz.dimensao; j++) 
+		{
+			LinhaStruct* linhaOrigem = Matriz.Linha[j];
+			ColunaStruct* colunaOrigem = linhaOrigem->Coluna[i];
+
+			LinhaStruct* linhaDestino = Matriz.Linha[i];
+			ColunaStruct* colunaDestino = linhaDestino->Coluna[j];
+
+			colunaDestino->Content = colunaOrigem->Content;
+		}
+	}
 }
 
 void preencherMatriz(char* buffer, int pos_linha) 
@@ -260,6 +286,8 @@ void readFile(char* file_source)
 		
 		qtdLinha++;
 	}
+
+	referenciarDiaInferiorcomDiaSuperior();
 }
 
 void printMatriz() 
@@ -273,7 +301,8 @@ void printMatriz()
 		printf("\t\t");
 		for(int j = 0; j < Matriz.dimensao; j++) 
 		{
-			printf("[%2s ] ", Matriz.Linha[i]->Coluna[j]->Content.content);
+			printf("(%d, %d)=%s",i, j, Matriz.Linha[i]->Coluna[j]->Content->content);
+			printf("%s", (j != Matriz.dimensao - 1 ? " ": ""));
 		}
 		printf("\n");
 	}
@@ -400,4 +429,14 @@ void printLista()
 	}
 
 	printf("==================================================\n");
+}
+
+void scie(ContentStruct content) 
+{
+	
+}
+
+void calcular(ContentStruct content) 
+{
+
 }
