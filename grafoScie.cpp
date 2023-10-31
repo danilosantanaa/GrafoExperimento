@@ -41,12 +41,11 @@ typedef struct lista {
 	ElementoStruct** Elemento;
 } ListaStruct;
 
-/** Variável global */
+/** Variáveis global */
 MatrizAdjacenteStruct Matriz;
 ListaStruct Lista;
 
 /** INTERFACES DE FUNÇÕES QUE SERÃO IMPLEMENTADO ABAIXO DO MAIN() */
-void atualizarDimensaoMatriz(char*);
 int obterQuantidadeColuna(char*);
 
 // Alocação/remoção de memoria
@@ -58,21 +57,24 @@ void liberarMemoria();
 
 // Operacao na lista
 void adicionarNo(int, ContentStruct);
-bool isNoAdicionado(int, ContentStruct);
+bool temContent(int, ContentStruct);
 void printLista();
 
 // Manipulacao de arquivos e preenchimento da matriz
 void tokenizar(char*, int, void (*func_ptr)(char*, int, int));
 void atribuirToken(char*, int, int);
-void preecherMatriz(char*, int);
+void preencherMatriz(char*, int);
 void readFile(char*);
 void printMatriz();
 
 // Obteção do grafo SCIE
 
+// Funções Extras
 template<typename T> void throwExceptionMemoryAlloc(T);
 
-int main(void) {
+// Função Principal
+int main(void) 
+{
 	setlocale(LC_ALL, "Portuguese");
 	
 	try 
@@ -93,6 +95,7 @@ int main(void) {
 	return 0;
 }
 
+/*** IMPLMENTAÇÕES ***/
 int obterQuantidadeColuna(char* buffer) 
 {
 	const char delimitador[2] = " ";
@@ -106,18 +109,13 @@ int obterQuantidadeColuna(char* buffer)
 	
 	/** Obter o segundo token */
 	int posicao = 0;
-	while(token != NULL) {
-		
+	while(token != NULL) 
+	{
 		token = strtok(NULL, delimitador);
 		posicao++;
 	}
 	
 	return posicao;
-}
-
-void atualizarDimensaoMatriz(char* token) 
-{
-	Matriz.dimensao++;
 }
 
 void alocarMemoria(char* buffer) 
@@ -208,7 +206,6 @@ void tokenizar(
 
 	while(token != NULL) 
 	{
-		
 		int ultima_posicao = strlen(token) - 1;
 		bool is_escape_quebra_linha = token[ultima_posicao] == '\n';
 
@@ -239,7 +236,7 @@ void atribuirToken(char* token, int pos_linha, int pos_coluna)
 	strcpy(coluna->Content.content, token);
 }
 
-void preecherMatriz(char* buffer, int pos_linha) 
+void preencherMatriz(char* buffer, int pos_linha) 
 {
 	// a funcao "tokenizar" vai gerar os tokens e cuspir para a funcao "atribuirToken"
 	tokenizar(buffer, pos_linha, &atribuirToken);
@@ -273,7 +270,7 @@ void readFile(char* file_source)
 			alocarMemoria(buffer);
 		}
 		
-		preecherMatriz(buffer, qtdLinha); 
+		preencherMatriz(buffer, qtdLinha); 
 		
 		qtdLinha++;
 	}
@@ -297,8 +294,10 @@ void printMatriz()
 	printf("==================================================\n");
 }
 
-void liberarMemoria() {
-	for(int pos = 0; pos < Matriz.dimensao; pos++) {
+void liberarMemoria() 
+{
+	for(int pos = 0; pos < Matriz.dimensao; pos++) 
+	{
 		LinhaStruct* linha = Matriz.Linha[pos];
 		free(linha->Coluna);
 	}
@@ -308,7 +307,8 @@ void liberarMemoria() {
 
 template<typename T> void throwExceptionMemoryAlloc(T ptr) 
 {
-	if(ptr == NULL) {
+	if(ptr == NULL) 
+	{
 		throw ERROR_ALOCACAO_MEMORIA_CODE;
 	}
 }
@@ -324,6 +324,7 @@ void adicionarNo(int posicaoElemento, ContentStruct content)
 	NoStruct* no = (NoStruct*) malloc(sizeof(NoStruct));
 	no->Content = content;
 	no->Prox = NULL;
+
 	elemento->tamanho++;
 
 	if(aux == NULL) 
@@ -341,14 +342,17 @@ void adicionarNo(int posicaoElemento, ContentStruct content)
 	noAnt->Prox = no;
 }
 
-bool isNoAdicionado(int posicaoElemento, ContentStruct content)
+bool temContent(int posicaoElemento, ContentStruct content)
 {
 	ElementoStruct* elemento = Lista.Elemento[posicaoElemento];
 
 	NoStruct* aux = elemento->NoInicial;
 
-	while(aux != NULL) {
-		bool is_content_iguais = strcmp(aux->Content.content, content.content) == 0;
+	while(aux != NULL) 
+	{
+		bool is_content_iguais = 
+			strcmp(aux->Content.content, content.content) == 0;
+
 		if(is_content_iguais) 
 		{
 			return true;
@@ -365,12 +369,14 @@ void printLista()
 	printf("  LISTAGEM DE CONJUNTOS QUE NAO SE TOCAM    \n");
 	printf("==================================================\n");
 
-	for(int posicaoElemento = 0; posicaoElemento < Lista.tamanho; posicaoElemento++) {
+	for(int posicaoElemento = 0; posicaoElemento < Lista.tamanho; posicaoElemento++) 
+	{
 		ElementoStruct* elemento = Lista.Elemento[posicaoElemento];
 		NoStruct* aux = elemento->NoInicial;
 
 		printf("QTD[%d]: ", elemento->tamanho);
-		while(aux != NULL) {
+		while(aux != NULL) 
+		{
 			printf("%s ", aux->Content.content);
 		}
 
