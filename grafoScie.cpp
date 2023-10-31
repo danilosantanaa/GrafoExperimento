@@ -3,9 +3,10 @@
 # include <locale>
 # include <string>
 # include <list>
+# include <iostream>
 # define TAM_BUFFER_READ 1000
-# define ERROR_FILE_NAO_EXISTE_CODE 404
-# define ERROR_ALOCACAO_MEMORIA_CODE 200
+
+using namespace std;
 
 /** Definições de estrutura de dados */
 typedef struct content {
@@ -90,9 +91,9 @@ int main(void)
 		
 		liberarMemoria();
 	} 
-	catch(int e) 
+	catch(std::exception& e) 
 	{
-		printf("<< Houve problema. Code: %d\n", e);
+		cout << "Exception: " << e.what() << endl;
 	}
 
 	return 0;
@@ -258,7 +259,7 @@ void lancarExceptionSeArquivoNaoExiste(FILE* fptr)
 {
 	if(fptr == NULL) 
 	{
-		throw ERROR_FILE_NAO_EXISTE_CODE;
+		throw std::runtime_error("Problema de alocar memoria!");
 	}
 }
 
@@ -292,21 +293,20 @@ void readFile(char* file_source)
 
 void printMatriz() 
 {
-	printf("==================================================\n");
-	printf("       MATRIZ ADJACENCIA: { %d X %d }             \n", Matriz.dimensao, Matriz.dimensao);
-	printf("==================================================\n");
+	cout << "==================================================" << endl;
+	printf("       MATRIZ ADJACENCIA: %d X %d \n", Matriz.dimensao, Matriz.dimensao);
+	cout << "==================================================" << endl;
 
 	for(int i = 0; i < Matriz.dimensao; i++) 
 	{
-		printf("\t\t");
 		for(int j = 0; j < Matriz.dimensao; j++) 
 		{
 			printf("(%d, %d)=%s",i, j, Matriz.Linha[i]->Coluna[j]->Content->content);
-			printf("%s", (j != Matriz.dimensao - 1 ? " ": ""));
+			printf("%s", (j != Matriz.dimensao - 1 ? ", ": ""));
 		}
-		printf("\n");
+		cout << endl;
 	}
-	printf("==================================================\n");
+	cout << "==================================================" << endl;
 }
 
 void liberarMemoria() 
@@ -324,7 +324,7 @@ template<typename T> void throwExceptionMemoryAlloc(T ptr)
 {
 	if(ptr == NULL) 
 	{
-		throw ERROR_ALOCACAO_MEMORIA_CODE;
+		throw std::runtime_error("Problema de alocar memoria!");
 	}
 }
 
@@ -405,30 +405,27 @@ void printLista()
 {
 	if(Lista.ElementoInicial == NULL)
 	{
-		printf("<< LISTA VAZIA >>\n");
+		cout << "<< LISTA VAZIA >>" << endl;
 		return;
 	}
 
-	printf("==================================================\n");
-	printf("  LISTAGEM DOS %d CONJUNTOS QUE NAO SE TOCAM    \n", Lista.tamanho);
-	printf("==================================================\n");
+	cout << "==================================================" << endl;
+	cout << "  LISTAGEM DOS "<< Lista.tamanho <<" CONJUNTOS QUE NAO SE TOCAM" << endl;
+	cout << "==================================================" << endl;
 
 	ElementoStruct* elemento = Lista.ElementoInicial;
 	while(elemento != NULL) 
 	{
 		NoStruct* no = elemento->NoInicial;
-		printf("QTD [%d]: ", elemento->tamanho);
+		cout << "QTD [" << elemento->tamanho << "]: ";
 		while(no != NULL)
 		{
-			printf("%s ", no->Content->content);
+			cout << no->Content->content << " ";
 			no = no->Prox;
 		}
-		printf("\n");
-
-		elemento = elemento->Prox;
+		cout << endl;
 	}
-
-	printf("==================================================\n");
+	cout << "==================================================";
 }
 
 void scie(ContentStruct content) 
