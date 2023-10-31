@@ -34,11 +34,12 @@ typedef struct no {
 typedef struct elemento {
 	int tamanho;
 	NoStruct* NoInicial;
+	struct elemento* Prox;
 } ElementoStruct;
 
 typedef struct lista {
 	int tamanho;
-	ElementoStruct** Elemento;
+	ElementoStruct* ElementoInicial;
 } ListaStruct;
 
 /** Variáveis global */
@@ -56,8 +57,8 @@ void alocarLista();
 void liberarMemoria();
 
 // Operacao na lista
-void adicionarNo(int, ContentStruct);
-bool temContent(int, ContentStruct);
+void adicionarNo(ElementoStruct*, ContentStruct);
+bool temContent(ElementoStruct*, ContentStruct);
 void printLista();
 
 // Manipulacao de arquivos e preenchimento da matriz
@@ -127,10 +128,9 @@ void alocarMemoria(char* buffer)
 	 */
 	int tamanho = obterQuantidadeColuna(buffer);
 	Matriz.dimensao = tamanho;
-	Lista.tamanho = tamanho;
+	Lista.tamanho = 0;
 
 	alocarLinhaMatriz();
-	alocarLista();
 }
 
 void alocarLinhaMatriz() 
@@ -172,21 +172,6 @@ void alocarColunaMatriz()
 
 			Matriz.Linha[posicaoLinha][posicaoColuna].Coluna = colunas;
 		}
-	}
-}
-
-void alocarLista() 
-{
-	Lista.Elemento = (ElementoStruct**) malloc(sizeof(ElementoStruct*) * Lista.tamanho);
-	throwExceptionMemoryAlloc<ElementoStruct**>(Lista.Elemento);
-
-	for(int i = 0; i < Lista.tamanho; i++) 
-	{
-		Lista.Elemento[i] = (ElementoStruct*) malloc(sizeof(ElementoStruct));
-		throwExceptionMemoryAlloc<ElementoStruct*>(Lista.Elemento[i]);
-
-		Lista.Elemento[i]->NoInicial = NULL;
-		Lista.Elemento[i]->tamanho = 0;
 	}
 }
 
@@ -314,50 +299,71 @@ template<typename T> void throwExceptionMemoryAlloc(T ptr)
 }
 
 /** MANIPULAÇÃO DA LISTA */
-void adicionarNo(int posicaoElemento, ContentStruct content)
+void alocarLista() 
 {
-	ElementoStruct* elemento = Lista.Elemento[posicaoElemento];
+	Lista.tamanho++;
+
 	
-	NoStruct* noAnt = NULL;
-	NoStruct* aux = elemento->NoInicial;
+	ElementoStruct* novoElemento = (ElementoStruct*) malloc(sizeof(ElementoStruct));
+	novoElemento->NoInicial = NULL;
+	novoElemento->tamanho = 0;
 
-	NoStruct* no = (NoStruct*) malloc(sizeof(NoStruct));
-	no->Content = content;
-	no->Prox = NULL;
-
-	elemento->tamanho++;
+	ElementoStruct* aux = Lista.ElementoInicial;
+	ElementoStruct* auxAnterior = NULL;
 
 	if(aux == NULL) 
 	{
-		elemento->NoInicial = no;
+		Lista.ElementoInicial = novoElemento;
+		return;
+	}
+
+	while(aux != NULL)
+	{
+		auxAnterior = aux;
+		aux = aux->Prox;
+	}
+
+	auxAnterior->Prox = novoElemento;
+
+}
+
+void adicionarNo(ElementoStruct* elemento, ContentStruct content)
+{
+	elemento->tamanho++;
+
+	NoStruct* novoNo = (NoStruct*) malloc(sizeof(NoStruct));
+	novoNo->Content = content;
+	novoNo->Prox = NULL;
+
+	NoStruct* aux = elemento->NoInicial;
+	NoStruct* auxAnterior = NULL;
+
+	if(aux == NULL)
+	{
+		elemento->NoInicial = novoNo;
 		return;
 	}
 
 	while(aux != NULL) 
 	{
-		noAnt = aux;
+		auxAnterior = aux;
 		aux = aux->Prox;
-	};
+	}
 
-	noAnt->Prox = no;
+	auxAnterior->Prox = novoNo;
 }
 
-bool temContent(int posicaoElemento, ContentStruct content)
+bool temContent(ElementoStruct* elemento, ContentStruct content)
 {
-	ElementoStruct* elemento = Lista.Elemento[posicaoElemento];
-
 	NoStruct* aux = elemento->NoInicial;
 
 	while(aux != NULL) 
 	{
-		bool is_content_iguais = 
-			strcmp(aux->Content.content, content.content) == 0;
-
-		if(is_content_iguais) 
+		bool is_contents_iguais = strcmp(aux->Content.content, content.content);
+		if(is_contents_iguais) 
 		{
 			return true;
 		}
-		aux = aux->Prox;
 	}
 
 	return false;
@@ -365,22 +371,29 @@ bool temContent(int posicaoElemento, ContentStruct content)
 
 void printLista() 
 {
-	printf("==================================================\n");
-	printf("  LISTAGEM DE CONJUNTOS QUE NAO SE TOCAM    \n");
-	printf("==================================================\n");
-
-	for(int posicaoElemento = 0; posicaoElemento < Lista.tamanho; posicaoElemento++) 
+	if(Lista.ElementoInicial == NULL)
 	{
-		ElementoStruct* elemento = Lista.Elemento[posicaoElemento];
-		NoStruct* aux = elemento->NoInicial;
+		printf("<< LISTA VAZIA >>\n");
+		return;
+	}
 
-		printf("QTD[%d]: ", elemento->tamanho);
-		while(aux != NULL) 
+	printf("==================================================\n");
+	printf("  LISTAGEM DOS %d CONJUNTOS QUE NAO SE TOCAM    \n", Lista.tamanho);
+	printf("==================================================\n");
+
+	ElementoStruct* elemento = Lista.ElementoInicial;
+	while(elemento != NULL) 
+	{
+		NoStruct* no = elemento->NoInicial;
+		printf("QTD [%d]: ", elemento->tamanho);
+		while(no != NULL)
 		{
-			printf("%s ", aux->Content.content);
+			printf("%s ", no->Content.content);
+			no = no->Prox;
 		}
-
 		printf("\n");
+
+		elemento = elemento->Prox;
 	}
 
 	printf("==================================================\n");
