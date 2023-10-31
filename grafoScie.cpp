@@ -360,7 +360,7 @@ bool temContent(ElementoStruct* elemento, ContentStruct content)
 
 	while(no != NULL) 
 	{
-		bool is_contents_iguais = strcmp(no->Content->content, content.content);
+		bool is_contents_iguais = no->Content == &content;
 		if(is_contents_iguais) 
 		{
 			return true;
