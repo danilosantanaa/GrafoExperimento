@@ -10,6 +10,7 @@
 /** Definições de estrutura de dados */
 typedef struct content {
 	char content[10];
+	bool is_visitado;
 } ContentStruct;
 
 typedef struct coluna {
@@ -27,7 +28,7 @@ typedef struct matrizAdjacente {
 } MatrizAdjacenteStruct;
 
 typedef struct no {
-	ContentStruct Content;
+	ContentStruct* Content;
 	struct no* Prox;
 } NoStruct;
 
@@ -332,7 +333,7 @@ void adicionarNo(ElementoStruct* elemento, ContentStruct content)
 	elemento->tamanho++;
 
 	NoStruct* novoNo = (NoStruct*) malloc(sizeof(NoStruct));
-	novoNo->Content = content;
+	novoNo->Content = &content;
 	novoNo->Prox = NULL;
 
 	NoStruct* aux = elemento->NoInicial;
@@ -359,7 +360,7 @@ bool temContent(ElementoStruct* elemento, ContentStruct content)
 
 	while(no != NULL) 
 	{
-		bool is_contents_iguais = strcmp(no->Content.content, content.content);
+		bool is_contents_iguais = strcmp(no->Content->content, content.content);
 		if(is_contents_iguais) 
 		{
 			return true;
@@ -390,7 +391,7 @@ void printLista()
 		printf("QTD [%d]: ", elemento->tamanho);
 		while(no != NULL)
 		{
-			printf("%s ", no->Content.content);
+			printf("%s ", no->Content->content);
 			no = no->Prox;
 		}
 		printf("\n");
