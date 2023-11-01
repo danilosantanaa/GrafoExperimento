@@ -9,37 +9,44 @@
 using namespace std;
 
 /** Definições de estrutura de dados */
-typedef struct content {
+typedef struct content 
+{
 	char content[10];
 	bool is_visitado;
 } ContentStruct;
 
-typedef struct coluna {
+typedef struct coluna 
+{
 	ContentStruct* Content;
 } ColunaStruct;
 
-typedef struct linha {
+typedef struct linha 
+{
 	ColunaStruct** Coluna;
 } LinhaStruct;
 
-typedef struct matrizAdjacente {
+typedef struct matrizAdjacente 
+{
 	int dimensao;
 	bool is_valorado;
 	LinhaStruct** Linha;
 } MatrizAdjacenteStruct;
 
-typedef struct no {
+typedef struct no 
+{
 	ContentStruct* Content;
 	struct no* Prox;
 } NoStruct;
 
-typedef struct elemento {
+typedef struct elemento 
+{
 	int tamanho;
 	NoStruct* NoInicial;
 	struct elemento* Prox;
 } ElementoStruct;
 
-typedef struct lista {
+typedef struct lista 
+{
 	int tamanho;
 	ElementoStruct* ElementoInicial;
 } ListaStruct;
@@ -75,6 +82,7 @@ void printMatriz();
 
 // Funções Extras
 template<typename T> void throwExceptionMemoryAlloc(T);
+void throwExceptionFileNotFound(FILE* fptr);
 
 // Função Principal
 int main(void) 
@@ -122,13 +130,14 @@ int obterQuantidadeColuna(char* buffer)
 	return posicao;
 }
 
+/**
+* Função responsável de alocar memorias.
+* Pega o buffer e calcula quanto 0s e 1s existem dentro do arquivo e 
+* chama a funcao para atualizar a dimensao da matriz. 
+* Lembre de callback em javascript.
+*/
 void alocarMemoria(char* buffer) 
 {
-	/** 
-	 * Pega o buffer e calcula quanto 0s e 1s existem dentro do arquivo e 
-	 * chama a funcao para atualizar a dimensao da matriz. 
-	 * Lembre de callback em javascript.
-	 */
 	int tamanho = obterQuantidadeColuna(buffer);
 	Matriz.dimensao = tamanho;
 	Lista.tamanho = 0;
@@ -189,7 +198,7 @@ void tokenizar(
 	/** Obter o primeiro token */
 	token = strtok(buffer, delimitador);
 	
-	/** Obter o segundo token */
+	/** Obter os restantes dos tokens */
 	int posicao = 0;
 
 	while(token != NULL) 
@@ -202,12 +211,6 @@ void tokenizar(
 			token[ultima_posicao] = '\0';
 		}
 		
-		/**
-		* CHAMADA DE CALLBACK: em javascript por exemplo, tem muito esse conceito de callback.
-		* O objetivo de usar callback é separação de responsabilidade de código.
-		* Essa função, a única responsabilidade dela é gerar tokens e cuspir para outro local, atribuir numa matriz/vetor
-		* fica a cargo de outra função. Tem como objetivo deixar o código mais limpo.
-		**/
 		(*func_ptr)(token, pos_linha, posicao);
 		
 		posicao++;
@@ -216,20 +219,24 @@ void tokenizar(
 	}
 }
 
+void preencherMatriz(char* buffer, int pos_linha) 
+{
+	// a funcao "tokenizar" vai gerar os tokens e cuspir para a funcao "atribuirToken"
+	tokenizar(buffer, pos_linha, &atribuirToken);
+}
 
 void atribuirToken(char* token, int pos_linha, int pos_coluna) 
 {	
+	bool is_matriz_diagonal_superior = pos_coluna > pos_linha;
+	if(is_matriz_diagonal_superior) return;
+	
+	LinhaStruct* linha = Matriz.Linha[pos_linha];
+	ColunaStruct* coluna = linha->Coluna[pos_coluna];
 
-	if(pos_coluna <= pos_linha) 
-	{
-		LinhaStruct* linha = Matriz.Linha[pos_linha];
-		ColunaStruct* coluna = linha->Coluna[pos_coluna];
+	coluna->Content = (ContentStruct*) malloc(sizeof(ContentStruct));
+	throwExceptionMemoryAlloc<ContentStruct*>(coluna->Content);
 
-		coluna->Content = (ContentStruct*) malloc(sizeof(ContentStruct));
-		throwExceptionMemoryAlloc<ContentStruct*>(coluna->Content);
-
-		strcpy(coluna->Content->content, token);
-	} 
+	strcpy(coluna->Content->content, token);
 }
 
 void referenciarDiaInferiorcomDiaSuperior() 
@@ -249,42 +256,27 @@ void referenciarDiaInferiorcomDiaSuperior()
 	}
 }
 
-void preencherMatriz(char* buffer, int pos_linha) 
+void throwExceptionFileNotFound(FILE* fptr) 
 {
-	// a funcao "tokenizar" vai gerar os tokens e cuspir para a funcao "atribuirToken"
-	tokenizar(buffer, pos_linha, &atribuirToken);
-}
-
-void lancarExceptionSeArquivoNaoExiste(FILE* fptr) 
-{
-	if(fptr == NULL) 
-	{
-		throw std::runtime_error("Problema de alocar memoria!");
-	}
+	if(fptr != NULL) return;
+	throw std::runtime_error("Arquivo nao encontrado!");
 }
 
 void readFile(char* file_source) 
 {
 	FILE* fptr = fopen(file_source, "r");
+	throwExceptionFileNotFound(fptr);
+	
 	char buffer[TAM_BUFFER_READ];
-	
-	lancarExceptionSeArquivoNaoExiste(fptr);
-	
 	int qtdLinha = 0;
 	while(fgets(buffer, TAM_BUFFER_READ, fptr)) 
 	{
-		/* EXPLICÃO DO: "if(qtdLinha == 0)"
-		* Quando for a primeira vez, o algoritmo irá pegar o buffer da primeira linha
-		* lido no arquivo e irá calcular quanto de espaço ixj a matriz irá precisar 
-		* para armazenar os tokens capturados do arquivo.
-		**/
-		if(qtdLinha == 0) 
+		bool is_primeiro_buffer_capturado = qtdLinha == 0;
+		if(is_primeiro_buffer_capturado) 
 		{
 			alocarMemoria(buffer);
 		}
-		
 		preencherMatriz(buffer, qtdLinha); 
-		
 		qtdLinha++;
 	}
 
@@ -322,10 +314,9 @@ void liberarMemoria()
 
 template<typename T> void throwExceptionMemoryAlloc(T ptr) 
 {
-	if(ptr == NULL) 
-	{
-		throw std::runtime_error("Problema de alocar memoria!");
-	}
+	if(ptr != NULL) return; 
+	
+	throw std::runtime_error("Problema de alocar memoria!");
 }
 
 /** MANIPULAÇÃO DA LISTA */
@@ -333,7 +324,6 @@ void alocarLista()
 {
 	Lista.tamanho++;
 
-	
 	ElementoStruct* novoElemento = (ElementoStruct*) malloc(sizeof(ElementoStruct));
 	novoElemento->NoInicial = NULL;
 	novoElemento->tamanho = 0;
@@ -354,7 +344,6 @@ void alocarLista()
 	}
 
 	auxAnterior->Prox = novoElemento;
-
 }
 
 void adicionarNo(ElementoStruct* elemento, ContentStruct content)
