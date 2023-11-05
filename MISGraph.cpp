@@ -151,7 +151,7 @@ class FileHandler {
 			/** Obter o primeiro token */
 			token = strtok(newBuffer, delimiter);
 
-			/** Obter o segundo token */
+			/** Obter o restante token */
 			int pos = 0;
 			while(token != NULL) {
 				token = strtok(NULL, delimiter);
@@ -190,8 +190,7 @@ class FileHandler {
 			FILE* fptr = fopen(file_source.c_str(), "r");
 
 			if(fptr == NULL) {
-				cout << "<< ERROR! Arquivo nao encontrado! >> " << endl;
-				exit(100);
+				throw std::runtime_error("<< ERROR! Arquivo nao encontrado! >> ");
 			}
 
 			char buffer[TAM_BUFFER_READ];
