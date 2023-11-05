@@ -23,9 +23,9 @@ class Graph {
 		void print() {
 			cout <<  "=== MATRIZ ADJACENCIA ====" << endl;
 			for(int line = 0; line < this->adjacency_matrix.size(); line++) {
-				cout << "pos " << line + 1 << ": ";
+				cout << " V" << line + 1 << ": ";
 				for(auto column: this->adjacency_matrix[line]) {
-					cout << "\t" << column << " ";
+					cout << "[ " << column << " ] ";
 				}
 				cout << endl;
 			}
@@ -106,14 +106,14 @@ class Graph {
 		}
 
 		void showResult(bool is_began_with_zero_vertex = false) {
-			cout << "CONJUNTO MAXIMAL: [" << this->independent_set.size() << "]" << endl;
+			cout << "SUBCONJUNTO INTERNAMENTE ESTAVEL: TAM |" << this->independent_set.size() << "| = ";
 			cout << "{ ";
 		
-			for(int pos = 0; this->independent_set.size(); pos++) {
+			for(int pos = 0; pos < this->independent_set.size(); pos++) {
 				auto vertex = this->independent_set[pos];
 
-				cout << ( is_began_with_zero_vertex ? vertex : vertex + 1 );
-				cout << ( pos < this->independent_set.size() ? ", " : "" );
+				cout << "V" << ( is_began_with_zero_vertex ? vertex : vertex + 1 );
+				cout << ( pos < this->independent_set.size() - 1 ? ", " : "" );
 			}
 			cout << " }" << endl << endl;
 		}
@@ -219,6 +219,7 @@ int main() {
 	do {
 		cout << "Informe o camanho do arquivo [sair: termina de executar]: ";
 		cin >> input;
+		cout << endl << endl;
 
 		if(strcmp(input.c_str(), "sair") == 0) break;
 
