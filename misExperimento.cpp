@@ -18,24 +18,6 @@ class Graph {
 			this->adjacency_matrix[src-1][dst-1] = value;
 		}
 
-		/**
-		 * 
-		 * Removo o grafico que as posições está marcado para ser deletado
-		*/
-		void remove() {
-			for(int line = this->adjacency_matrix.size() - 1; line >= 0; line--) {
-				auto it = this->vertexDeletedSet.find(line);
-
-				if(this->isVertexDeletedTrack(line))
-				{
-					this->adjacency_matrix.erase(this->adjacency_matrix.begin() + line);
-					cout << "Deleted " << endl;
-				}
-			}
-
-			this->vertexDeletedSet.clear();
-		}
-
 		void print() {
 			cout <<  "=== MATRIZ ADJACENCIA ====" << endl;
 			for(int line = 0; line < this->adjacency_matrix.size(); line++) {
@@ -59,29 +41,29 @@ class Graph {
 			return new_graph;
 		}
 
-		bool isEmpty(Graph* graph) {
+		bool isEmpty() {
 			bool is_empty = true;
-
-			for(auto i: graph->adjacency_matrix) {
-				for(auto j: i) {
-					is_empty = is_empty && j == "0";
-				}
+			for(int line = 0; line < this->adjacency_matrix.size(); line++) {
+				is_empty = is_empty && this->isVertexIguinor(line);
 			}
-
 			return is_empty;
 		}
 
-		int min_pos(Graph* graph) {
+		int min_pos() {
 			int pos_min_vertex;
 			int min_degree;
 
-			for(int line = 0; line < graph->adjacency_matrix.size(); line++) {
+			for(int line = 0; line < this->adjacency_matrix.size(); line++) {
+
+				if(this->isVertexIguinor(line)) continue;
+				
 				int tot_degree = 0;
-				for(auto column: graph->adjacency_matrix[line]) {
+				for(auto column: this->adjacency_matrix[line]) {
 					if(column == "1") tot_degree++;
 				}
-
-				if(line == 0 || tot_degree < min_degree) {
+				
+				bool is_min = line == 0 || tot_degree < min_degree;
+				if(is_min) {
 					min_degree = tot_degree;
 					pos_min_vertex = line;
 				}
@@ -90,31 +72,31 @@ class Graph {
 			return pos_min_vertex;
 		}
 
-		void addNeighborDelete(Graph* graph, int min_degree) {
-			for(int i = 0; i < graph->adjacency_matrix.size(); i++) {
-				if(graph->adjacency_matrix[min_degree][i] == "1") {
-					graph->addVertexDelete(i);
+		void addNeighborDelete(int min_degree) {
+			for(int i = 0; i < this->adjacency_matrix.size(); i++) {
+				
+				if(this->adjacency_matrix[min_degree][i] == "1" && i != min_degree) {
+					this->addVertexDelete(i);
 				}
 			}
 		}
 
-		void addVertexDegreeMinDelete(Graph* graph, int min_degree)
+		void addVertexDegreeMinDelete(int min_degree)
 		{
-			graph->addVertexDelete(min_degree);
+			this->addVertexDelete(min_degree);
 		}
 
 		vector<int> mis() {
 			vector<int> independent_set;
 			Graph graph = this->copy();
 
-			while(!isEmpty(&graph)) {
-				int vertex_min_degree_position = min_pos(&graph);
+			while(!graph.isEmpty()) {
+				int vertex_min_degree_position = graph.min_pos();
 
 				independent_set.push_back(vertex_min_degree_position);
 
-				graph.addNeighborDelete(&graph, vertex_min_degree_position);
-				graph.addVertexDegreeMinDelete(&graph, vertex_min_degree_position);
-				graph.remove();
+				graph.addNeighborDelete(vertex_min_degree_position);
+				graph.addVertexDegreeMinDelete(vertex_min_degree_position);
 			}
 
 			graph.print();
@@ -130,7 +112,7 @@ class Graph {
 				vertexDeletedSet.insert(vertex);
 			}
 
-			bool isVertexDeletedTrack(int vertex_search){
+			bool isVertexIguinor(int vertex_search){
 				for(auto element: vertexDeletedSet) {
 					if(vertex_search == element) return true;
 				}
