@@ -102,6 +102,12 @@ class Graph {
 				graph.addNeighborStatusDeleted(vertex_min_degree_position);
 				graph.addVertexDegreeMinStatusDeleted(vertex_min_degree_position);
 			}
+
+			// Caso o grafo for trivial ou completo, onde o algoritmo só conseque pegar um clique.
+			if(graph.independent_set.size() == 1){
+				graph.independent_set.clear();
+			}
+
 			return graph;
 		}
 
