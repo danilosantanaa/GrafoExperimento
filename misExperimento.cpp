@@ -1,14 +1,16 @@
 #include <iostream>
 #include <vector>
 #include <set>
+#define TAM_BUFFER_READ 1000
 
 using namespace std;
 
 class Graph {
 	public:
 		vector<vector<string>> adjacency_matrix;
+		vector<int> independent_set;
 
-		Graph(int tam) {
+		void createAdjacenteMatrix(int tam) {
 			vector<string> line;
 			line.assign(tam, "0");
 			this->adjacency_matrix.assign(tam, line);
@@ -27,10 +29,12 @@ class Graph {
 				}
 				cout << endl;
 			}
+			cout << "============================" << endl;
 		}
 
 		Graph copy() {
-			Graph new_graph(this->adjacency_matrix.size());
+			Graph new_graph;
+			new_graph.createAdjacenteMatrix(this->adjacency_matrix.size());
 
 			for(int i = 0; i < this->adjacency_matrix.size(); i++) {
 				for(int j = 0; j < this->adjacency_matrix.size(); j++) {
@@ -86,22 +90,24 @@ class Graph {
 			this->addVertexDelete(min_degree);
 		}
 
-		vector<int> mis() {
-			vector<int> independent_set;
+		Graph mis() {
 			Graph graph = this->copy();
-
 			while(!graph.isEmpty()) {
 				int vertex_min_degree_position = graph.min_pos();
-
-				independent_set.push_back(vertex_min_degree_position);
-
+				graph.independent_set.push_back(vertex_min_degree_position);
 				graph.addNeighborDelete(vertex_min_degree_position);
 				graph.addVertexDegreeMinDelete(vertex_min_degree_position);
 			}
+			return graph;
+		}
 
-			graph.print();
-
-			return independent_set;
+		void showResult() {
+			cout << "CONJUNTO MAXIMAL: [" << this->independent_set.size() << "]" << endl;
+			cout << "{ ";
+			for(auto i: this->independent_set) {
+				cout << i << " ";
+			}
+			cout << "}" << endl << endl;
 		}
 		
 		private:
@@ -118,69 +124,100 @@ class Graph {
 				}
 				return false;
 			}
-
 };
 
+class FileHandler {
+	public:
+	Graph graph;
 
-/** HEADER */
-void teste1(Graph* graph);
-
-int main() {
-	Graph graph(6);
-
-	teste1(&graph);
-
-	vector<int> i = graph.mis();
-
-	for(auto t: i) {
-		printf("%d\n", t + 1);
+	FileHandler(Graph graph) {
+		this->graph = graph;
 	}
 
+	int getColumnTotal(char* buffer) 
+	{
+		const char delimiter[2] = " ";
+		char* token;
+		char newBuffer[TAM_BUFFER_READ];
+		
+		strcpy(newBuffer, buffer);
+		
+		/** Obter o primeiro token */
+		token = strtok(newBuffer, delimiter);
+		
+		/** Obter o segundo token */
+		int pos = 0;
+		while(token != NULL) 
+		{
+			token = strtok(NULL, delimiter);
+			pos++;
+		}
+		
+		return pos;
+	}
+
+	void tokenize(char* buffer, int pos_line)
+	{
+		const char delimter[2] = " ";
+		char* token;
+		
+		/** Obter o primeiro token */
+		token = strtok(buffer, delimter);
+		
+		/** Obter os restantes dos tokens */
+		int pos_column = 0;
+		while(token != NULL) 
+		{
+			int last_posicional = strlen(token) - 1;
+			bool is_new_break_scape = token[last_posicional] == '\n';
+			if(is_new_break_scape) 
+			{
+				token[last_posicional] = '\0';
+			}
+
+			this->graph.addVertex(pos_line+1, pos_column+1, token);
+			pos_column++;
+			token = strtok(NULL, delimter);
+		}
+	}
+
+	Graph read(string file_source) 
+	{
+		FILE* fptr = fopen(file_source.c_str(), "r");
+		
+		if(fptr == NULL) {
+			cout << "<< ERROR! Arquivo nao encontrado! >> " << endl;
+			exit(100);
+		}
+
+		char buffer[TAM_BUFFER_READ];
+		int totalLine = 0;
+		while(fgets(buffer, TAM_BUFFER_READ, fptr)) 
+		{
+			bool is_first_buffer_catch = totalLine == 0;
+			if(is_first_buffer_catch) 
+			{
+				int totalColumn = this->getColumnTotal(buffer);
+				cout << totalColumn << endl;
+				this->graph.createAdjacenteMatrix(totalColumn);
+			}
+
+			this->tokenize(buffer, totalLine);
+
+			totalLine++;
+		}
+
+		return this->graph;
+	}
+};
+
+int main() {
+	Graph graph;
+	FileHandler file(graph);
+
+	graph = file.read("tmp/teste01.txt");
 	graph.print();
+	graph.mis().showResult();
 
 	return 0;
-}
-
-void teste1(Graph* graph) {
-	graph->addVertex(1, 1, "0");
-	graph->addVertex(1, 2, "1");
-	graph->addVertex(1, 3, "1");
-	graph->addVertex(1, 4, "0");
-	graph->addVertex(1, 5, "1");
-	graph->addVertex(1, 6, "0");
-
-	graph->addVertex(2, 1, "1");
-	graph->addVertex(2, 2, "0");
-	graph->addVertex(2, 3, "0");
-	graph->addVertex(2, 4, "0");
-	graph->addVertex(2, 5, "1");
-	graph->addVertex(2, 6, "0");
-
-	graph->addVertex(3, 1, "1");
-	graph->addVertex(3, 2, "0");
-	graph->addVertex(3, 3, "0");
-	graph->addVertex(3, 4, "0");
-	graph->addVertex(3, 5, "1");
-	graph->addVertex(3, 6, "1");
-
-	graph->addVertex(4, 1, "0");
-	graph->addVertex(4, 2, "0");
-	graph->addVertex(4, 3, "0");
-	graph->addVertex(4, 4, "0");
-	graph->addVertex(4, 5, "0");
-	graph->addVertex(4, 6, "1");
-
-	graph->addVertex(5, 1, "1");
-	graph->addVertex(5, 2, "1");
-	graph->addVertex(5, 3, "1");
-	graph->addVertex(5, 4, "0");
-	graph->addVertex(5, 5, "0");
-	graph->addVertex(5, 6, "1");
-
-	graph->addVertex(6, 1, "0");
-	graph->addVertex(6, 2, "0");
-	graph->addVertex(6, 3, "1");
-	graph->addVertex(6, 4, "1");
-	graph->addVertex(6, 5, "1");
-	graph->addVertex(6, 6, "0");
 }
