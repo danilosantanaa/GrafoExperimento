@@ -215,7 +215,7 @@ int main() {
 	Graph graph;
 	FileHandler file(graph);
 
-	graph = file.read("tmp/teste01.txt");
+	graph = file.read("testes/teste01.txt");
 	graph.print();
 	graph.mis().showResult();
 
